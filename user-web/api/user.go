@@ -8,8 +8,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"mxshop-api/user-web/global/response"
 	"mxshop-api/user-web/proto"
 	"net/http"
+	"time"
 )
 
 func HandleGrpcErrorToHttp(err error, c *gin.Context) {
@@ -45,7 +47,7 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 
 func GetUserList(ctx *gin.Context) {
 	ip := "127.0.0.1"
-	port := 50051
+	port := 8078
 	// 拨号连接用户grpc服务器
 	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", ip, port), grpc.WithInsecure())
 	if err != nil {
@@ -67,15 +69,17 @@ func GetUserList(ctx *gin.Context) {
 	}
 	result := make([]interface{}, 0)
 	for _, value := range rsp.Data {
-		data := make(map[string]interface{})
+		//data := make(map[string]interface{})
 
-		data["id"] = value.Id
-		data["name"] = value.NickName
-		data["birthday"] = value.BirthDay
-		data["gender"] = value.Gender
-		data["mobile"] = value.Mobile
+		user := response.UserResponse{
+			Id:       value.Id,
+			NickName: value.NickName,
+			Birthday: response.JsonTime(time.Unix(int64(value.BirthDay), 0)),
+			Gender:   value.Gender,
+			Mobile:   value.Mobile,
+		}
 
-		result = append(result, data)
+		result = append(result, user)
 	}
 	ctx.JSON(http.StatusOK, result)
 }
