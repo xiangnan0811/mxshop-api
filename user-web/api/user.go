@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"mxshop-api/user-web/global"
 	"mxshop-api/user-web/global/response"
 	"mxshop-api/user-web/proto"
 	"net/http"
@@ -46,10 +47,9 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 }
 
 func GetUserList(ctx *gin.Context) {
-	ip := "127.0.0.1"
-	port := 8078
 	// 拨号连接用户grpc服务器
-	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", ip, port), grpc.WithInsecure())
+	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", global.ServerConfig.UserSrvConfig.Host,
+		global.ServerConfig.UserSrvConfig.Port), grpc.WithInsecure())
 	if err != nil {
 		zap.S().Errorw(
 			"[GetUserList] 连接 【用户服务】 失败",
