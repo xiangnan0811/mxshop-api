@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"mxshop-api/user-web/api"
+	"github.com/xiangnan0811/mxshop-api/user-web/api"
 )
 
 func InitUserRouter(Router *gin.RouterGroup) {

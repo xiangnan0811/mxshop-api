@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"go.uber.org/zap"
-	"mxshop-api/user-web/global"
-	"mxshop-api/user-web/initialize"
+	"github.com/xiangnan0811/mxshop-api/user-web/global"
+	"github.com/xiangnan0811/mxshop-api/user-web/initialize"
 )
 
 func main() {

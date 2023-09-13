@@ -5,7 +5,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"mxshop-api/user-web/global"
+	"github.com/xiangnan0811/mxshop-api/user-web/global"
 )
 
 func GetEnvInfo(env string) bool {
