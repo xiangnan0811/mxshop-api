@@ -17,3 +17,5 @@
 # idea 文件
 .idea/
 .vscode
+# ignore vscode debug file
+__debug_bin**

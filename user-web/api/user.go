@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,15 +19,8 @@ import (
 	"github.com/xiangnan0811/mxshop-api/user-web/global"
 	"github.com/xiangnan0811/mxshop-api/user-web/global/response"
 	"github.com/xiangnan0811/mxshop-api/user-web/proto"
+	"github.com/xiangnan0811/mxshop-api/user-web/utils"
 )
-
-func removeTopStruct(fields map[string]string) map[string]string {
-    r := make(map[string]string, len(fields))
-    for field, val := range fields {
-        r[field[strings.Index(field, ".")+1:]] = val
-    }
-    return r
-}
 
 func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 	// 将grpc的code转换为http的状态码
@@ -106,19 +98,24 @@ func PassWordLogin(c *gin.Context) {
 	// 参数校验
 	passwordLoginForm := forms.PassWordLoginForm{}
     if err := c.ShouldBindJSON(&passwordLoginForm); err != nil {
-        errs, ok := err.(validator.ValidationErrors)
-        if !ok {
-            c.JSON(http.StatusBadRequest, gin.H{
-                "error": err.Error(),
-            })
-            return
-        }
-        c.JSON(http.StatusBadRequest, gin.H{
-            "error": removeTopStruct(errs.Translate(global.Trans)),
-        })
-        return
+		HandleValidateError(c, err)
+		return
     }
     c.JSON(http.StatusOK, gin.H{
         "status": "you are logged in",
     })
+}
+
+func HandleValidateError(c *gin.Context, err error) {
+	// 处理参数校验错误
+	errs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusBadRequest, gin.H{
+		"error": utils.RemoveTopStruct(errs.Translate(global.Trans)),
+	})
 }

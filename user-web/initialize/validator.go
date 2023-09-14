@@ -15,9 +15,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/xiangnan0811/mxshop-api/user-web/global"
+    custom_validator "github.com/xiangnan0811/mxshop-api/user-web/validator"
 )
 
-func InitTrans(locale string) (err error) {
+func InitTransLators(locale string) (err error) {
     // 修改 gin 的 Validator 引擎属性，实现自定义翻译器
     if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
         // 注册一个获取 json tag 的自定义方法
@@ -39,13 +40,21 @@ func InitTrans(locale string) (err error) {
         }
         switch locale {
         case "en":
-            en_translations.RegisterDefaultTranslations(v, global.Trans)
+            _ = en_translations.RegisterDefaultTranslations(v, global.Trans)
         case "zh":
-            zh_translations.RegisterDefaultTranslations(v, global.Trans)
+            _ = zh_translations.RegisterDefaultTranslations(v, global.Trans)
         default:
-            en_translations.RegisterDefaultTranslations(v, global.Trans)
+            _ = en_translations.RegisterDefaultTranslations(v, global.Trans)
         }
         return
     }
     return
+}
+
+func InitValidators() {
+    // 注册自定义验证器
+    // 1. 注册手机号验证器
+    if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+        _ = v.RegisterValidation("mobile", custom_validator.ValidateMobile)
+    }
 }

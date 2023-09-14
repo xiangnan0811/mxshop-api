@@ -1,5 +1,6 @@
 name: 'user-web'
 port: 8023
+lauguage: 'zh'
 user_srv:
   host: '127.0.0.1'
   port: 8078
