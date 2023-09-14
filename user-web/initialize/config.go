@@ -2,9 +2,11 @@ package initialize
 
 import (
 	"fmt"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
 	"github.com/xiangnan0811/mxshop-api/user-web/global"
 )
 
@@ -18,7 +20,7 @@ func InitConfig() {
 	configFilePrefix := "config"
 	configFileName := fmt.Sprintf("user-web/%s-pro.yaml", configFilePrefix)
 	if debug {
-		configFileName = fmt.Sprintf("user-web/%s-debug.yaml", configFilePrefix)
+		configFileName = fmt.Sprintf("user-web/%s-dev.yaml", configFilePrefix)
 	}
 
 	v := viper.New()

@@ -3,46 +3,47 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+
 	"github.com/xiangnan0811/mxshop-api/user-web/global"
 	"github.com/xiangnan0811/mxshop-api/user-web/global/response"
 	"github.com/xiangnan0811/mxshop-api/user-web/proto"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 	// 将grpc的code转换为http的状态码
-	if err != nil {
-		if e, ok := status.FromError(err); ok {
-			switch e.Code() {
-			case codes.NotFound:
-				c.JSON(http.StatusNotFound, gin.H{
-					"msg": e.Message(),
-				})
-			case codes.Internal:
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"msg": "内部错误" + e.Message(),
-				})
-			case codes.InvalidArgument:
-				c.JSON(http.StatusBadRequest, gin.H{
-					"msg": "参数错误",
-				})
-			case codes.Unavailable:
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"msg": "用户服务不可用",
-				})
-			default:
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"msg": e.Code(),
-				})
-				return
-			}
+	if e, ok := status.FromError(err); ok {
+		switch e.Code() {
+		case codes.NotFound:
+			c.JSON(http.StatusNotFound, gin.H{
+				"msg": e.Message(),
+			})
+		case codes.Internal:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "内部错误" + e.Message(),
+			})
+		case codes.InvalidArgument:
+			c.JSON(http.StatusBadRequest, gin.H{
+				"msg": "参数错误",
+			})
+		case codes.Unavailable:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "服务不可用",
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "其他错误",
+			})
+			return
 		}
 	}
 }
@@ -50,7 +51,7 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 func GetUserList(ctx *gin.Context) {
 	// 拨号连接用户grpc服务器
 	userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", global.ServerConfig.UserSrvConfig.Host,
-		global.ServerConfig.UserSrvConfig.Port), grpc.WithInsecure())
+		global.ServerConfig.UserSrvConfig.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		zap.S().Errorw(
 			"[GetUserList] 连接 【用户服务】 失败",
