@@ -5,11 +5,21 @@ import "google/protobuf/empty.proto";
 option go_package = "./proto";
 
 service User {
-  rpc GetUserList(PageInfo) returns (UserListResponse);                 // 用户列表
-  rpc GetUserByMobile(MobileRequest) returns (UserInfoResponse);        // 通过 mobile 查询用户
-  rpc GetUserById(IdRequest) returns (UserInfoResponse);                // 通过 mobile 查询用户
-  rpc CreateUser(CreateUserInfo) returns (UserInfoResponse);            // 创建用户
-  rpc UpdateUser(UpdateUserInfo) returns (google.protobuf.Empty);       // 更新用户
+  rpc GetUserList(PageInfo) returns (UserListResponse);                       // 用户列表
+  rpc GetUserByMobile(MobileRequest) returns (UserInfoResponse);              // 通过 mobile 查询用户
+  rpc GetUserById(IdRequest) returns (UserInfoResponse);                      // 通过 mobile 查询用户
+  rpc CreateUser(CreateUserInfo) returns (UserInfoResponse);                  // 创建用户
+  rpc UpdateUser(UpdateUserInfo) returns (google.protobuf.Empty);             // 更新用户
+  rpc CheckPassWord(PassWordCheckRequest) returns (PassWordCheckResponse);    // 检查密码
+}
+
+message PassWordCheckRequest {
+  string password = 1;
+  string encryptedPassword = 2;
+}
+
+message PassWordCheckResponse {
+  bool success = 1;
 }
 
 message PageInfo {
