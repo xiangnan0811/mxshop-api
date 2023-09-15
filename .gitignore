@@ -19,3 +19,4 @@
 .vscode
 # ignore vscode debug file
 __debug_bin**
+.DS_Store

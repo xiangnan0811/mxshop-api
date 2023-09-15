@@ -8,5 +8,6 @@ import (
 
 var (
 	ServerConfig *config.ServerConfig = &config.ServerConfig{}
+	JwtConfig    *config.JwtConfig    = &config.JwtConfig{}
 	Trans        ut.Translator
 )
