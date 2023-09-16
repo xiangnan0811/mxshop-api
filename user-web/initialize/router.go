@@ -15,6 +15,7 @@ func Routers() *gin.Engine {
 
 	ApiRouter := Router.Group("/u/v1")
 	router.InitUserRouter(ApiRouter) // 注册用户路由
+	router.InitBaseRouter(ApiRouter) // 注册基础路由
 
 	return Router
 }

@@ -8,10 +8,16 @@ require (
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.15.4
+	github.com/mojocn/base64Captcha v1.3.5
 	github.com/spf13/viper v1.16.0
 	go.uber.org/zap v1.25.0
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0
+)
+
+require (
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
+	golang.org/x/image v0.12.0 // indirect
 )
 
 require (

@@ -105,6 +105,15 @@ func PassWordLogin(c *gin.Context) {
         return
     }
 
+    // 验证码校验
+    ok := store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, true)
+    if !ok {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "msg": "验证码错误",
+        })
+        return
+    }
+
     // 拨号连接用户grpc服务器
     userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", global.ServerConfig.UserSrvConfig.Host,
         global.ServerConfig.UserSrvConfig.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
