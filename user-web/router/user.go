@@ -12,7 +12,7 @@ func InitUserRouter(Router *gin.RouterGroup) {
 	UserRouter := Router.Group("user")
 	zap.S().Infow("配置用户相关的url")
 	{
-		UserRouter.GET("list", middlewares.JWTAuth(), api.GetUserList) // 用户列表页
-		UserRouter.POST("login", api.PassWordLogin)                    // 用户登录
+		UserRouter.GET("list", middlewares.JWTAuth(), middlewares.IsAdminAuth(), api.GetUserList) // 用户列表页
+		UserRouter.POST("login", api.PassWordLogin)                                               // 用户登录
 	}
 }

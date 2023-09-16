@@ -9,5 +9,5 @@ user_srv:
 
 jwt:
   key: 'JX9%HWv^Fe!AseSuVfEXL#nv9heTUC9MrqDU'
-  expires: 3600 # 1 hour
+  expires: 36000 # 1 hour
   issuer: 'xiangnan.ai'
