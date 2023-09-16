@@ -11,7 +11,7 @@ func IsAdminAuth() gin.HandlerFunc {
 		claims, _ := c.Get("claims")
 		currentUser := claims.(*models.CustomClaims)
 
-		if currentUser.AuthorityId == 2 {
+		if currentUser.AuthorityId != 2 {
 			c.JSON(403, gin.H{
 				"msg": "无权限",
 			})
