@@ -11,3 +11,24 @@ jwt:
   key: 'JX9%HWv^Fe!AseSuVfEXL#nv9heTUC9MrqDU'
   expires: 36000 # 1 hour
   issuer: 'xiangnan.ai'
+
+tencent:
+  sms_sdk_appId: ''
+  template_id: ''
+  sign_name: ''
+
+sms:
+  expire: 300 # 5 minutes
+  length: 6
+  interval: 60 # 1 minute
+
+captcha:
+  captcha_length: 6
+  captcha_charset: '0123456789'
+  captcha_type: 'number'
+  captcha_prefix: 'SMS_'
+  captcha_expire: 300 # 5 minutes
+  captcha_max_retry: 3
+  captcha_interval: 60 # 1 minute
+  captcha_template_id: ''
+  captcha_sign_name: ''

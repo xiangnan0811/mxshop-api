@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -10,16 +11,28 @@ import (
 	"github.com/xiangnan0811/mxshop-api/user-web/global"
 )
 
-func GetEnvInfo(env string) bool {
+func GetEnv(env string) interface{} {
 	viper.AutomaticEnv()
-	return viper.GetBool(env)
+	val := viper.Get(env)
+	fmt.Println("env:", env, "val:", val)
+	return val
 }
 
 func InitConfig() {
-	debug := GetEnvInfo("MXSHOP_DEBUG")
+	// tencent cloud sms config from env
+	global.ServerConfig.TencentSmsInfo.SecretId = GetEnv("TENCENTCLOUD_SECRET_ID").(string)
+	global.ServerConfig.TencentSmsInfo.SecretKey = GetEnv("TENCENTCLOUD_SECRET_KEY").(string)
+
+	// redis config
+	global.ServerConfig.RedisInfo.Host = GetEnv("MXSHOP_REDIS_HOST").(string)
+	global.ServerConfig.RedisInfo.Port, _ = strconv.Atoi(GetEnv("MXSHOP_REDIS_PORT").(string))
+	global.ServerConfig.RedisInfo.Password = GetEnv("MXSHOP_REDIS_PASSWORD").(string)
+
+	// config file
+	debug := GetEnv("MXSHOP_DEBUG")
 	configFilePrefix := "config"
 	configFileName := fmt.Sprintf("user-web/%s-pro.yaml", configFilePrefix)
-	if debug {
+	if debug == "true" {
 		configFileName = fmt.Sprintf("user-web/%s-dev.yaml", configFilePrefix)
 	}
 

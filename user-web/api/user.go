@@ -1,28 +1,29 @@
 package api
 
 import (
-    "context"
-    "fmt"
-    "net/http"
-    "strconv"
-    "time"
+	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
 
-    "github.com/dgrijalva/jwt-go"
-    "github.com/gin-gonic/gin"
-    "github.com/go-playground/validator/v10"
-    "go.uber.org/zap"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/credentials/insecure"
-    "google.golang.org/grpc/status"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
-    "github.com/xiangnan0811/mxshop-api/user-web/forms"
-    "github.com/xiangnan0811/mxshop-api/user-web/global"
-    "github.com/xiangnan0811/mxshop-api/user-web/global/response"
-    "github.com/xiangnan0811/mxshop-api/user-web/middlewares"
-    "github.com/xiangnan0811/mxshop-api/user-web/models"
-    "github.com/xiangnan0811/mxshop-api/user-web/proto"
-    "github.com/xiangnan0811/mxshop-api/user-web/utils"
+	"github.com/xiangnan0811/mxshop-api/user-web/forms"
+	"github.com/xiangnan0811/mxshop-api/user-web/global"
+	"github.com/xiangnan0811/mxshop-api/user-web/global/response"
+	"github.com/xiangnan0811/mxshop-api/user-web/middlewares"
+	"github.com/xiangnan0811/mxshop-api/user-web/models"
+	"github.com/xiangnan0811/mxshop-api/user-web/proto"
+	"github.com/xiangnan0811/mxshop-api/user-web/utils"
 )
 
 func HandleGrpcErrorToHttp(err error, c *gin.Context) {
@@ -31,6 +32,10 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
         switch e.Code() {
         case codes.NotFound:
             c.JSON(http.StatusNotFound, gin.H{
+                "msg": e.Message(),
+            })
+        case codes.AlreadyExists:
+            c.JSON(http.StatusBadRequest, gin.H{
                 "msg": e.Message(),
             })
         case codes.Internal:
@@ -205,5 +210,86 @@ func HandleValidateError(c *gin.Context, err error) {
     }
     c.JSON(http.StatusBadRequest, gin.H{
         "error": utils.RemoveTopStruct(errs.Translate(global.Trans)),
+    })
+}
+
+func Register(c *gin.Context) {
+    // 参数校验
+    registerForm := forms.RegisterForm{}
+    if err := c.ShouldBindJSON(&registerForm); err != nil {
+        HandleValidateError(c, err)
+        return
+    }
+
+    // 短信验证码校验
+    rdb := redis.NewClient(&redis.Options{
+        Addr: fmt.Sprintf("%s:%d", global.ServerConfig.RedisInfo.Host, global.ServerConfig.RedisInfo.Port),
+        DB: global.ServerConfig.SmsInfo.SmsRedisDB,
+        Password: global.ServerConfig.RedisInfo.Password,
+    })
+    val, err := rdb.Get(context.Background(), registerForm.Mobile).Result()
+    if err == redis.Nil  || val != registerForm.Code {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "msg": "短信验证码错误",
+        })
+        return
+    }
+
+    // 验证码校验
+    ok := store.Verify(registerForm.CaptchaId, registerForm.Captcha, true)
+    if !ok {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "msg": "验证码错误",
+        })
+        return
+    }
+
+    // 拨号连接用户grpc服务器
+    userConn, err := grpc.Dial(fmt.Sprintf("%s:%d", global.ServerConfig.UserSrvConfig.Host,
+        global.ServerConfig.UserSrvConfig.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        zap.S().Errorw(
+            "[GetUserList] 连接 【用户服务】 失败",
+            "msg", err.Error(),
+        )
+    }
+    // 生成grpc的client并调用接口
+    userSrvClient := proto.NewUserClient(userConn)
+    createRsp, err := userSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+        Mobile: registerForm.Mobile,
+        PassWord: registerForm.Password,
+        NickName: registerForm.Mobile,
+    })
+    if err != nil {
+        zap.S().Errorf("[Register] 新建 [新建用户] 失败: %s", err.Error())
+        HandleGrpcErrorToHttp(err, c)
+        return
+    }
+    
+    // 生成token
+    j := middlewares.NewJWT()
+    claims := models.CustomClaims{
+        ID:          uint(createRsp.Id),
+        NickName:    createRsp.NickName,
+        AuthorityId: uint(createRsp.Role),
+        StandardClaims: jwt.StandardClaims{
+            ExpiresAt: time.Now().Add(time.Duration(global.ServerConfig.JWTInfo.Expires) * time.Second).Unix(),
+            Issuer:    global.ServerConfig.JWTInfo.Issuer,
+        },
+    }
+    token, err := j.CreateToken(claims)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "msg": "内部错误",
+        })
+        return
+    }
+
+    // 返回结果
+    c.JSON(http.StatusOK, gin.H{
+        "id": createRsp.Id,
+        "nick_name": createRsp.NickName,
+        "token": token,
+        "expired_at":  int64(claims.ExpiresAt) * 1000,
     })
 }
